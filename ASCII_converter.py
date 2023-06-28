@@ -11,5 +11,19 @@ class Converter_ASCII:
         self.extended = extended
         
     def greyscale(self):
-        grey_img = self.image
-        return grey_img
+        #BT.709
+        tempR = self.image[:,:,0]
+        tempG = self.image[:,:,1]
+        tempB = self.image[:,:,2]
+        # luminance probably well written
+        Y   = (0.21260*tempR     + 0.71520*tempG + 0.07220*tempB).round()
+        Cb  = (-0.11457*tempR    - 0.38543*tempG + 0.5*tempB).round()
+        Cr  = (0.5*tempR         - 0.45415*tempG - 0.04585*tempB).round()
+
+        imageYCbCr = np.empty_like(self.image)
+        imageYCbCr[:,:,0] = Y.astype('uint8')
+        imageYCbCr[:,:,1] = Cb.astype('uint8')
+        imageYCbCr[:,:,2] = Cr.astype('uint8')
+        
+        # return only luminance - returns image in greyscale
+        return imageYCbCr[:,:,0]
