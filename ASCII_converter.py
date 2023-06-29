@@ -6,11 +6,12 @@ SIGNS_EXTENDED = ['36', '64', '66', '37', '56', '38', '87', '77', '35', '42', '1
 SIGNS_SHORT = ['32', '46', '58', '45', '61', '43', '42', '35', '37', '64']
 
 class Converter_ASCII:
-    def __init__(self, image, extended):
+    def __init__(self, image = None, extended = None):
         self.image = image
+        self.image_grey = image
         self.extended = extended
         
-    def greyscale(self):
+    def greyscale_convert(self):
         #BT.709
         tempR = self.image[:,:,0]
         tempG = self.image[:,:,1]
@@ -27,3 +28,35 @@ class Converter_ASCII:
         
         # return only luminance - returns image in greyscale
         return imageYCbCr[:,:,0]
+    
+    # Thanks to: https://stackoverflow.com/a/16858283
+    def blockshaped(self, arr, nrows, ncols):
+        """
+        Return an array of shape (n, nrows, ncols) where
+        n * nrows * ncols = arr.size
+
+        If arr is a 2D array, the returned array should look like n subblocks with
+        each subblock preserving the "physical" layout of arr.
+        """
+        h, w = arr.shape
+        assert h % nrows == 0, f"{h} rows is not evenly divisible by {nrows}"
+        assert w % ncols == 0, f"{w} cols is not evenly divisible by {ncols}"
+        return (arr.reshape(h//nrows, nrows, -1, ncols)
+                .swapaxes(1,2)
+                .reshape(-1, nrows, ncols))
+    
+    def convert_to_ASCII(self):
+        self.image_grey = self.greyscale_convert()
+        PIXELS = 8
+        IMG_WIDTH = self.image_grey.shape[1]
+        IMG_HEIGHT = self.image_grey.shape[0]
+        
+        # take 64-pixel chunks
+        chunks = self.blockshaped(self.image_grey, PIXELS, PIXELS)
+        for chunk in chunks:
+            mean_val = int(np.mean(chunk))
+            if mean_val >= 50 and mean_val <= 206:
+                curr_val = 3 * ((mean_val-50) / 3)
+        
+    def mean_chunk(self, chunk):
+        print("Hello")
